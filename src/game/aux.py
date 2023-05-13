@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Judgement(Enum):
+class Judgment(Enum):
     GHOST = 0
     HIT100 = 1
     HIT300 = 2

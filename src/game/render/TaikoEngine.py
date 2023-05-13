@@ -39,9 +39,8 @@ class TaikoEngine:
                self.display.height / 2
 
     def visible_notes(self, time: int) -> list[list[float]]:
-        return [[*self.coords(time, note), float(note.type.value)]
+        return [[*self.coords(time, note), float(note.type.value), float(note.speed)]
                 for note in sorted(self.beatmap.notes, key=lambda x: abs(time - x.time))]
-                # if self.coords(time, note)[0] <= self.display.width]
 
     def score(self) -> tuple[int, int, float]:
         return self.taiko_state.score, self.taiko_state.combo, self.taiko_state.accuracy

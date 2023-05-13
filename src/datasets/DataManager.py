@@ -1,3 +1,4 @@
+# WORK IN PROGRESS
 import os
 import random
 from collections import defaultdict
@@ -8,6 +9,7 @@ import numpy as np
 
 class DataManager:
     data_paths = defaultdict(lambda: '')
+
     def __init__(self, dataset_name: str, classes: list[str]):
         self.name = dataset_name
         self.classes = dict(zip(classes, range(len(classes))))

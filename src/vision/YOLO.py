@@ -1,3 +1,5 @@
+# WORK IN PROGRESS
+
 from roboflow import Roboflow
 from ultralytics import YOLO
 from PIL.Image import Image
@@ -16,4 +18,4 @@ class YOLOVision:
 
     def scan(self, image: Image):
         results = self.model(image)
-        
+        return results

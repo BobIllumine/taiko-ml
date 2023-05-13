@@ -36,6 +36,10 @@ class OsuMap:
                             f"SliderTickRate:(?P<tick_rate>{FLOAT})\s")
 
     def __init__(self, inputs) -> None:
+        '''
+        Parser for `.osu` files
+        :param inputs: text
+        '''
         assert isinstance(inputs, str)
         self.data = self._parse(inputs)
         self.timing_points = self.data['timing_pts']
@@ -45,11 +49,18 @@ class OsuMap:
         self.notes = self._get_notes()
 
     def _parse(self, text):
-        # https://osu.ppy.sh/wiki/en/Client/File_formats/Osu_%28file_format%29
+        '''
+        More details on the data format can be found at:
+        https://osu.ppy.sh/wiki/en/Client/File_formats/Osu_%28file_format%29
+
+        :param text:
+        :return:
+        '''
         hit_objects = []
         timing_points = []
         difficulty = []
         combined = defaultdict(lambda: [])
+        # Match the regexes
         for section_name, section_content in re.findall(OsuMap.SECTIONS, text):
             if section_name == "HitObjects":
                 hit_objects.extend(re.findall(OsuMap.HIT_OBJECT, section_content))
@@ -62,12 +73,17 @@ class OsuMap:
         combined['difficulty'] = list(map(float, difficulty))
         return combined
 
-    def _get_notes(self):
+    def _get_notes(self) -> list[Note]:
+        '''
+        Convert parsed hit objects into notes with universal speed
+        :return:
+        '''
         notes = []
 
         self.timing_points[0].sv = self.base_sv
         prev_timing = self.timing_points[0]
 
+        # Setting the speed for each timing point
         for timing in self.timing_points[1:]:
             if not timing.uninherited:
                 timing.beat_duration = prev_timing.beat_duration
@@ -75,6 +91,7 @@ class OsuMap:
             else:
                 timing.sv = self.base_sv
 
+        # Creating notes for timing points [0 : last - 1]
         for i in range(len(self.timing_points) - 1):
             prev, next = self.timing_points[i], self.timing_points[i + 1]
             for hit_obj in self._time_slice(prev.time, next.time):
@@ -84,8 +101,10 @@ class OsuMap:
                     n_type = NoteType.LARGE_RED if hit_obj.hit_sound & 4 else NoteType.SMALL_RED
                 notes.append(Note(hit_obj.time, (prev.sv * 100) / prev.beat_duration, n_type))
 
+        # Notes for [last : ]
         last = self.timing_points[-1]
         for hit_obj in self._time_slice(last.time):
+            # 1st or 3rd bit is on -- color is blue, 2nd bit is on -- circle is large
             if hit_obj.hit_sound & 2 or hit_obj.hit_sound & 8:
                 n_type = NoteType.LARGE_BLUE if hit_obj.hit_sound & 4 else NoteType.SMALL_BLUE
             else:
@@ -94,7 +113,13 @@ class OsuMap:
 
         return notes
 
-    def _time_slice(self, start: int, end: int = -1) -> list:
+    def _time_slice(self, start: int, end: int = -1) -> list[Note]:
+        '''
+        Get the time slice
+        :param start:
+        :param end:
+        :return:
+        '''
         left = bisect_left(self.hit_objects, start, key=lambda x: x.time)
         if end == -1:
             return self.hit_objects[left:]
